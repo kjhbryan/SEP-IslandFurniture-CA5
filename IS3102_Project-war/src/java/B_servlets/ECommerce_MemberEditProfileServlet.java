@@ -59,7 +59,8 @@ public class ECommerce_MemberEditProfileServlet extends HttpServlet {
             m.setAge(Integer.parseInt(request.getParameter("age")));
             m.setIncome(Integer.parseInt(request.getParameter("income")));
             m.setEmail((String)session.getAttribute("memberEmail"));
-            String updateStatus = memberEditProfile(m);
+            String password = request.getParameter("password");
+            String updateStatus = memberEditProfile(m,password);
             if(updateStatus != null){
                 List<CountryEntity> countries = facilityManagementBean.getListOfCountries();
                 session.setAttribute("countries",countries);
@@ -73,7 +74,7 @@ public class ECommerce_MemberEditProfileServlet extends HttpServlet {
         }
     }
     
-    public String memberEditProfile(Member member)
+    public String memberEditProfile(Member member,String password)
     {
         Client client = ClientBuilder.newClient();
         WebTarget target = client
@@ -87,7 +88,8 @@ public class ECommerce_MemberEditProfileServlet extends HttpServlet {
                 .queryParam("securityAnswer",member.getSecurityAnswer())
                 .queryParam("age",member.getAge())
                 .queryParam("income",member.getIncome())
-                .queryParam("email", member.getEmail());
+                .queryParam("email", member.getEmail())
+                .queryParam("password",password);
        Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
        Response response = invocationBuilder.post(null);
        
