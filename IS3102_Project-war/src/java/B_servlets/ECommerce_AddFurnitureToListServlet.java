@@ -58,20 +58,56 @@ public class ECommerce_AddFurnitureToListServlet extends HttpServlet {
             if (shoppingCart == null) {
                 shoppingCart = new ArrayList<>();
             }
-            int itemQty = getQuantity(countryID, SKU);
-            if(itemQty > 0)
-            {
-                ShoppingCartLineItem scli = new ShoppingCartLineItem();
-                scli.setCountryID(countryID);
-                scli.setId(id);
-                scli.setImageURL(imageURL);
-                scli.setName(name);
-                scli.setPrice(price);
-                scli.setSKU(SKU);
-                scli.setQuantity(1);
-                shoppingCart.add(scli);
-                session.setAttribute("shoppingCart", shoppingCart);
-                response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Item successfully added into the cart!");
+            if (shoppingCart.size() > 0) {
+                for (ShoppingCartLineItem shoppingCartLineItem : shoppingCart) {
+                    int itemQty = getQuantity(countryID, SKU);
+                    if (shoppingCartLineItem.getSKU().equals(SKU)) {
+                        if (itemQty > shoppingCartLineItem.getQuantity()) {
+                            shoppingCartLineItem.setQuantity(shoppingCartLineItem.getQuantity() + 1);
+                            session.setAttribute("shoppingCart", shoppingCart);
+
+                            response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Item successfully added into the cart!");
+                            return;
+                        } else {
+                            response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?errMsg=Item not added to cart, not enough quantity available");
+                            return;
+                        }
+                    } else if (shoppingCart.get(shoppingCart.size() - 1).equals(shoppingCartLineItem)) {
+                        if (itemQty > 0) {
+                            ShoppingCartLineItem scli = new ShoppingCartLineItem();
+                            scli.setCountryID(countryID);
+                            scli.setId(id);
+                            scli.setImageURL(imageURL);
+                            scli.setName(name);
+                            scli.setPrice(price);
+                            scli.setSKU(SKU);
+                            scli.setQuantity(1);
+                            shoppingCart.add(scli);
+                            session.setAttribute("shoppingCart", shoppingCart);
+                            response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Item successfully added into the cart!");
+                        } else {
+                            response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?errMsg=Item not added to cart, not enough quantity available");
+                        }
+                    }
+
+                }
+            } else {
+                int itemQty = getQuantity(countryID, SKU);
+                if (itemQty > 0) {
+                    ShoppingCartLineItem scli = new ShoppingCartLineItem();
+                    scli.setCountryID(countryID);
+                    scli.setId(id);
+                    scli.setImageURL(imageURL);
+                    scli.setName(name);
+                    scli.setPrice(price);
+                    scli.setSKU(SKU);
+                    scli.setQuantity(1);
+                    shoppingCart.add(scli);
+                    session.setAttribute("shoppingCart", shoppingCart);
+                    response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Item successfully added into the cart!");
+                } else {
+                    response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?errMsg=Item not added to cart, not enough quantity available");
+                }
             }
 
         } catch (Exception ex) {
