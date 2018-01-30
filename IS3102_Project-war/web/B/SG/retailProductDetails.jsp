@@ -21,7 +21,11 @@
             List<RetailProduct> retailProducts = (List<RetailProduct>) (session.getAttribute("retailProducts"));
             RetailProduct retailProduct = new RetailProduct();
             List<StoreEntity> storesInCountry = (List<StoreEntity>) session.getAttribute("storesInCountry");
-            /*insert code here*/
+            for(RetailProduct r : retailProducts){
+                if(r.getSKU().equals(sku)){
+                 retailProduct = r;
+                }
+            }
         %>
         <div class="body">
             <jsp:include page="menu2.jsp" />
@@ -42,22 +46,22 @@
                             <div class="col-md-6">
                                 <div>
                                     <div class="thumbnail">
-                                        <img alt="" class="img-responsive img-rounded" src="../../..<%/*insert imageURL*/%>">
+                                        <img alt="" class="img-responsive img-rounded" src="../../..<%=retailProduct.getImageUrl()%>">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="summary entry-summary">
-                                    <h2 class="shorter"><strong>Insert product name here</strong></h2>
+                                    <h2 class="shorter"><strong><%=retailProduct.getName()%></strong></h2>
 
-                                    <p class="price"><h4 class="amount"><%/*insert code here*/%></h4></p>
+                                    <p class="price"><h4 class="amount">$<%=retailProduct.getPrice()%></h4></p>
                                     <strong>Description</strong>
                                     <p class="taller">
-                                        <%/*insert code here*/%>
+                                        <%=retailProduct.getDescription()%>
                                     </p>
                                     <div class="product_meta">
-                                        <span class="posted_in">Category: <a rel="tag" href="#"><%/*insert code here*/%></a></span>
+                                        <span class="posted_in">Category: <a rel="tag" href="#"><%=retailProduct.getCategory()%></a></span>
                                     </div>
                                     <br/><br/>
 
@@ -83,7 +87,7 @@
                                                     %>
                                                 </select><br/><br/>
                                                 <input type="submit" class="btn btn-primary btn-icon" value="Check Item Availability"/>
-                                                <input type="hidden" name="sku" value="<%=sku%>"/>
+                                                <input type="hidden" name="sku" value="<%=retailProduct.getSKU()%>"/>
                                                 <input type="hidden" name="type" value="Retail Product"/>
                                             </form>
                                         </div>
