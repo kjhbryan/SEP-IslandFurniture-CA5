@@ -15,6 +15,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  *
@@ -32,6 +38,8 @@ public class ECommerce_AddFurnitureToListServlet extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
+    ArrayList<ShoppingCartLineItem> shoppingCart;
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -46,23 +54,51 @@ public class ECommerce_AddFurnitureToListServlet extends HttpServlet {
             String imageURL = request.getParameter("imageURL");
             Long countryID = (Long) session.getAttribute("countryID");
 
-            ArrayList<ShoppingCartLineItem> shoppingCart = (ArrayList<ShoppingCartLineItem>) session.getAttribute("shoppingCart");
-
-            ShoppingCartLineItem scli = new ShoppingCartLineItem();
-            scli.setCountryID(countryID);
-            scli.setId(id);
-            scli.setImageURL(imageURL);
-            scli.setName(name);
-            scli.setPrice(price);
-            scli.setSKU(SKU);
-            scli.setQuantity(1);
-            shoppingCart.add(scli);
-            session.setAttribute("shoppingCart", shoppingCart);
-            response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Item successfully added into the cart!");
+            shoppingCart = (ArrayList<ShoppingCartLineItem>) session.getAttribute("shoppingCart");
+            if (shoppingCart == null) {
+                shoppingCart = new ArrayList<>();
+            }
+            int itemQty = getQuantity(countryID, SKU);
+            if(itemQty > 0)
+            {
+                ShoppingCartLineItem scli = new ShoppingCartLineItem();
+                scli.setCountryID(countryID);
+                scli.setId(id);
+                scli.setImageURL(imageURL);
+                scli.setName(name);
+                scli.setPrice(price);
+                scli.setSKU(SKU);
+                scli.setQuantity(1);
+                shoppingCart.add(scli);
+                session.setAttribute("shoppingCart", shoppingCart);
+                response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Item successfully added into the cart!");
+            }
 
         } catch (Exception ex) {
             out.println("\n\n " + ex.getMessage());
             ex.printStackTrace();
+        }
+    }
+
+    public int getQuantity(Long countryID, String SKU) {
+        try {
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client
+                    .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.countryentity")
+                    .path("getQuantity")
+                    .queryParam("countryID", countryID)
+                    .queryParam("SKU", SKU);
+            Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
+            Response response = invocationBuilder.get();
+            if (response.getStatus() != 200) {
+                return 0;
+            }
+            String result = (String) response.readEntity(String.class);
+            return Integer.parseInt(result);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 
