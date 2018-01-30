@@ -5,8 +5,10 @@
  */
 package B_servlets;
 
+import HelperClasses.ShoppingCartLineItem;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -33,7 +35,7 @@ public class ECommerce_AddFurnitureToListServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-       PrintWriter out = response.getWriter();
+        PrintWriter out = response.getWriter();
         try {
             HttpSession session;
             session = request.getSession();
@@ -43,10 +45,22 @@ public class ECommerce_AddFurnitureToListServlet extends HttpServlet {
             String name = request.getParameter("name");
             String imageURL = request.getParameter("imageURL");
             Long countryID = (Long) session.getAttribute("countryID");
-            String message = "";
-        }
-        catch(Exception ex)
-        {
+
+            ArrayList<ShoppingCartLineItem> shoppingCart = (ArrayList<ShoppingCartLineItem>) session.getAttribute("shoppingCart");
+
+            ShoppingCartLineItem scli = new ShoppingCartLineItem();
+            scli.setCountryID(countryID);
+            scli.setId(id);
+            scli.setImageURL(imageURL);
+            scli.setName(name);
+            scli.setPrice(price);
+            scli.setSKU(SKU);
+            scli.setQuantity(1);
+            shoppingCart.add(scli);
+            session.setAttribute("shoppingCart", shoppingCart);
+            response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Item successfully added into the cart!");
+
+        } catch (Exception ex) {
             out.println("\n\n " + ex.getMessage());
             ex.printStackTrace();
         }
