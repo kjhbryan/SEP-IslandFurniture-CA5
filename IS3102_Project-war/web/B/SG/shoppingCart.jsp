@@ -1,3 +1,5 @@
+<%@page import="java.math.RoundingMode"%>
+<%@page import="java.text.DecimalFormat"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="HelperClasses.ShoppingCartLineItem"%>
 <%@page import="EntityManager.WishListEntity"%>
@@ -13,6 +15,7 @@
     <body>
         <%
             double finalPrice = 0.0;
+            double subTotal = 0.0;
         %>
         <script>
             var totalPrice = 0;
@@ -150,14 +153,21 @@
                                                                 <form enctype="multipart/form-data" method="post" class="cart">
                                                                     <div class="quantity">
                                                                         <input type="button" class="minus" value="-" onclick="minus('<%=item.getSKU()%>')">
-                                                                        <input type="text" disabled="true" class="input-text qty text" title="Qty" value="" name="quantity" min="1" step="1" id="<%=SKU()%>">
+                                                                        <input type="text" disabled="true" class="input-text qty text" title="Qty" value="<%=item.getQuantity()%>" name="quantity" min="1" step="1" id="<%=item.getSKU()%>">
                                                                         <input type="button" class="plus" value="+" onclick="plus('<%=item.getSKU()%>', '<%=item.getName()%>',<%=item.getPrice()%>, '<%=item.getImageURL()%>')">
                                                                     </div>
                                                                 </form>
                                                             </td>
                                                             <td class="product-subtotal">
                                                                 $<span class="amount" id="totalPrice<%=item.getSKU()%>>">
-                                                                    <%=finalPrice%>
+                                                                    <% 
+                                                                        DecimalFormat df = new DecimalFormat("#.00");
+                                                                        df.setRoundingMode(RoundingMode.CEILING);
+                                                                        subTotal = item.getQuantity() * item.getPrice();
+                                                                        subTotal = Double.parseDouble(df.format(subTotal));
+                                                                        finalPrice+= subTotal; 
+                                                                    %>
+                                                                    <%=subTotal%>
                                                                 </span>
                                                             </td>
                                                         </tr>
@@ -178,7 +188,7 @@
                                                             </td>
                                                             <td class="product-subtotal">
                                                                 $<span class="amount" id="finalPrice" name="finalPrice">
-                                                                    
+                                                                    <%=finalPrice%>
                                                                 </span>
                                                             </td>
                                                         </tr>
