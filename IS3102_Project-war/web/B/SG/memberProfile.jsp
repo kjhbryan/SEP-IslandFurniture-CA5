@@ -1,3 +1,8 @@
+<%@page import="HelperClasses.ShoppingCartLineItem"%>
+<%@page import="java.text.SimpleDateFormat"%>
+<%@page import="java.util.Date"%>
+<%@page import="HelperClasses.SalesRecordItem"%>
+<%@page import="java.util.ArrayList"%>
 <%@page import="HelperClasses.Member"%>
 <%@page import="EntityManager.CountryEntity"%>
 <%@page import="EntityManager.LoyaltyTierEntity"%>
@@ -8,7 +13,12 @@
 <jsp:include page="checkCountry.jsp" />
 <html> 
     <jsp:include page="header.html" />
-    <body>
+    <body> 
+        <%
+            
+            double finalPrice = 0.0;
+            DecimalFormat df = new DecimalFormat("#0.00");
+            %>
         <script>
             function validatePassword() {
                 var password = document.getElementById("password").value;
@@ -56,8 +66,8 @@
                     <%
                         try {
                             Member member = (Member) session.getAttribute("member");
+                            ArrayList<SalesRecordItem> salesHistory = (ArrayList<SalesRecordItem>) (session.getAttribute("salesHistory"));
                             
-                            DecimalFormat df = new DecimalFormat("#.##");
                     %>
                     <div class="row" style="min-height: 500px;">
                         <div class="tabs">
@@ -409,6 +419,107 @@
                                         </div>
                                     </form>
                                     <%}%>
+                                </div>
+                                
+                                <div id="salesHistory" class="tab-pane">
+                                    <% 
+                                        try {
+                                            if (salesHistory.size() > 0 && salesHistory != null) {
+                                                for (SalesRecordItem s : salesHistory) {
+                                                    Date datePurchased = s.getDatePurchased();
+                                                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEEE, dd MMMMM yyyy");
+                                    %>
+                                    <h4 style="font-weight:bold">Order #<%=s.getOrderNo()%></h4> 
+                                    <h4>Date purchased: <%=simpleDateFormat.format(datePurchased)%></h4>
+                                    <h4>Store Name: <%=s.getStoreName()%></h4>
+                                    <h4>Store Location: <%=s.getStoreAddress()%></h4>
+                                    <div class="shop">
+                                        <div class="featured-box featured-box-secundary featured-box-cart">
+                                            <div class="box-content">
+                                                <table cellspacing="0" class="shop_table cart">
+                                                    <thead>
+                                                        <tr>                                                                          
+                                                            <th class="product-thumbnail" style="width:30%;">
+                                                                Image
+                                                            </th>
+                                                            <th class="product-name" >
+                                                                Product
+                                                            </th>
+
+                                                            <th class="product-price" style="width: 15%">
+                                                                Price
+                                                            </th>
+                                                            <th class="product-quantity" >
+                                                                Quantity
+                                                            </th>
+                                                            <th class="product-subtotal" style="width: 15%">
+                                                                Subtotal
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <%
+                                                            List<ShoppingCartLineItem> lineItemRecords = s.getShoppingCartLineItemList();
+                                                            try {
+                                                                if (lineItemRecords != null && lineItemRecords.size() > 0) {
+                                                                    for (ShoppingCartLineItem scli : lineItemRecords) {
+                                                        %>
+                                                        <tr class="cart_table_item">
+                                                            <td class="product-thumbnail" style="width:30%;">
+                                                                <a href="furnitureProductDetails.jsp">
+                                                                    <img style="width:200px!important;height:200px!important;" alt="" class="img-responsive" src="../../..<%=scli.getImageURL()%>">
+                                                                </a>
+                                                            </td>
+                                                            <td class="product-name">
+                                                                <a class="productDetails" href="furnitureProductDetails.jsp?sku=<%=scli.getSKU()%>"><%=scli.getName()%></a>
+                                                            </td>
+                                                            <td class="product-price">
+                                                                $<span class="amount" id="price<%=scli.getSKU()%>">
+                                                                    <%=df.format(scli.getPrice())%>
+                                                                </span>
+                                                            </td>
+                                                            <td class="product-quantity" style="text-align: center;">
+                                                                <%=scli.getQuantity()%>
+                                                            </td>
+                                                            <td class="product-subtotal">
+                                                                $<span class="amount" id="totalPrice">
+                                                                    <%=df.format(scli.getPrice() * scli.getQuantity())%>
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        <%
+                                                                finalPrice = s.getTotalAmount();
+                                                                    }
+                                                                }
+                                                            } catch (Exception ex) {
+                                                                System.out.println(ex);
+                                                            }
+                                                        %>
+                                                        <tr>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td class="product-subtotal" style="font-weight: bold">
+                                                                Total: 
+                                                            </td>
+                                                            <td class="product-subtotal">
+                                                                $<span class="amount" id="finalPrice" name="finalPrice">
+                                                                    <%=df.format(finalPrice)%>
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <%
+                                                }
+                                            }
+                                        } catch (Exception ex) {
+
+                                        }
+                                    %>
                                 </div>
                             </div>
                         </div>
