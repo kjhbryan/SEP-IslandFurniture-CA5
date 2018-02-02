@@ -66,10 +66,14 @@ public class ECommerce_GetMember extends HttpServlet {
                 session.setAttribute("member", member);
                 session.setAttribute("memberEmail", memberEmail);
                 session.setAttribute("memberName", member.getName());
-                Long countryId = (Long) session.getAttribute("countryId");
+                Long countryId = (Long) session.getAttribute("countryID");
                 List<SalesRecordItem> salesHistory = getSalesHistory(member.getId(), countryId);
+                if(salesHistory.size() > 0 && salesHistory != null)
+                {
+                    session.setAttribute("salesHistory", salesHistory);
+                }
                 response.sendRedirect("/IS3102_Project-war/B/SG/memberProfile.jsp");
-            }   
+            }    
         }
         catch(Exception ex){
             out.println("\n\n " + ex.getMessage());
@@ -95,7 +99,8 @@ public class ECommerce_GetMember extends HttpServlet {
     {
         Client client  = ClientBuilder.newClient();
         WebTarget target = client
-                .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.memberentity").path("getSalesHistory")
+                .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.memberentity")
+                .path("getSalesHistory")
                 .queryParam("memberId",memberId)
                 .queryParam("countryId",countryId); 
         Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
