@@ -9,6 +9,8 @@ import CorporateManagement.FacilityManagement.FacilityManagementBean;
 import CorporateManagement.FacilityManagement.FacilityManagementBeanLocal;
 import EntityManager.CountryEntity;
 import HelperClasses.Member;
+import HelperClasses.SalesRecordItem;
+import HelperClasses.ShoppingCartLineItem;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -23,6 +25,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -63,6 +66,8 @@ public class ECommerce_GetMember extends HttpServlet {
                 session.setAttribute("member", member);
                 session.setAttribute("memberEmail", memberEmail);
                 session.setAttribute("memberName", member.getName());
+                Long countryId = (Long) session.getAttribute("countryId");
+                List<SalesRecordItem> salesHistory = getSalesHistory(member.getId(), countryId);
                 response.sendRedirect("/IS3102_Project-war/B/SG/memberProfile.jsp");
             }   
         }
@@ -85,7 +90,26 @@ public class ECommerce_GetMember extends HttpServlet {
         
         return response.readEntity(Member.class);
     }
-
+    
+    public List<SalesRecordItem> getSalesHistory(Long memberId,Long countryId)
+    {
+        Client client  = ClientBuilder.newClient();
+        WebTarget target = client
+                .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.memberentity").path("getSalesHistory")
+                .queryParam("memberId",memberId)
+                .queryParam("countryId",countryId); 
+        Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
+        Response response = invocationBuilder.get();
+        if(response.getStatus() != 200)
+        {
+            return null; 
+        }
+          
+        List<SalesRecordItem> list = response.readEntity(new GenericType<List<SalesRecordItem>>() {
+        });
+        return list;
+    }   
+    
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
