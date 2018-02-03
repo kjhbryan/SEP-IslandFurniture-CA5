@@ -51,14 +51,14 @@ public class ECommerce_StockAvailability extends HttpServlet {
         }
     }
 
-    public int getQuantity(Long storeID, String SKU) {
+    public int getQuantity(Long storeId, String SKU) {
         try {
             System.out.println("getQuantity() SKU: " + SKU);
             Client client = ClientBuilder.newClient();
             WebTarget target = client
                     .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.storeentity")
                     .path("getQuantity")
-                    .queryParam("storeID", storeID)
+                    .queryParam("storeId", storeId)
                     .queryParam("SKU", SKU);
             Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
             Response response = invocationBuilder.get();
