@@ -48,85 +48,118 @@ public class ECommerce_PaymentServlet extends HttpServlet {
         try {
             HttpSession session;
             session = request.getSession();
+
             shoppingCart = (ArrayList<ShoppingCartLineItem>) session.getAttribute("shoppingCart");
             if (shoppingCart != null && shoppingCart.size() > 0) {
                 double finalPrice = calculateTotalAmount(shoppingCart);
-                String memberEmail = (String) session.getAttribute("memberEmail");
-                Member member = getMember(memberEmail);
-                Long memberId = member.getId();  
-                int transactionRecordId = createECommerceTransactionRecord(finalPrice,memberId);
-                int storeId = 59;
-                if (transactionRecordId != 0) {
-                    for (ShoppingCartLineItem s : shoppingCart) {
-                        int result = createECommerceLineItemRecord(s, transactionRecordId);
-                        if(result == 1)
-                        {
-                            if (shoppingCart.get(shoppingCart.size() - 1).equals(s)) {
-                            String storeName = getStoreDetail((long) storeId, "name");
-                            String storeAddress = getStoreDetail((long) storeId, "address");
-                            session.setAttribute("shoppingCart", null);
-                            response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Successfully paid. Your item can be collected from "
-                                    + storeName + " located at " + storeAddress);
+                Long selectedStore = Long.parseLong(request.getParameter("storeSelection"));
+                int storeQty = checkQtyInStore(selectedStore, shoppingCart);
+                if (storeQty > shoppingCart.get(0).getQuantity()) {
+                    String memberEmail = (String) session.getAttribute("memberEmail");
+                    Member member = getMember(memberEmail);
+                    Long memberId = member.getId();
+                    int transactionRecordId = createECommerceTransactionRecord(finalPrice, memberId,selectedStore);
+                    if (transactionRecordId != 0) {
+                        for (ShoppingCartLineItem s : shoppingCart) {
+                            int result = createECommerceLineItemRecord(s, transactionRecordId,selectedStore);
+                            if (result == 1) {
+                                if (shoppingCart.get(shoppingCart.size() - 1).equals(s)) {
+                                    String storeAddress = getStoreNameOrAddress(selectedStore, "address");
+                                    String storeName = getStoreNameOrAddress(selectedStore, "name");
+                                    session.setAttribute("shoppingCart", null);
+                                    response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?goodMsg=Successfully paid. Your item can be collected from "
+                                            + storeName + " located at " + storeAddress);
+                                }
+                            } else {
+                                session.setAttribute("shoppingCart", null);
+                                response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?errMsg=Error in inserting into line item record.");
                             }
+
                         }
-                        else
-                        {
-                            session.setAttribute("shoppingCart", null);
-                            response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?errMsg=Error in inserting into line item record.");
-                        }
+                    } else {
                         
+                        session.setAttribute("shoppingCart", null);
+                        response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?errMsg=Error in inserting into transaction record.");
                     }
-                } else {
-                    session.setAttribute("shoppingCart", null);
-                    response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?errMsg=Error in inserting into transaction record.");
                 }
+                else
+                {
+                    String storeAddress = getStoreNameOrAddress(selectedStore, "address");
+                    String storeName = getStoreNameOrAddress(selectedStore, "name");
+                    response.sendRedirect("/IS3102_Project-war/B/SG/shoppingCart.jsp?errMsg=Sorry, the store you've selected : " + storeName + " does not have enough quantiy of the product");
+                }
+
             }
-            
 
         } catch (Exception ex) {
             ex.printStackTrace();
 
         }
     }
-    
-    public int createECommerceTransactionRecord(double finalPrice,  Long memberId) {
+
+    public int checkQtyInStore(Long storeId, ArrayList<ShoppingCartLineItem> shoppingCart) {
+        ShoppingCartLineItem s = shoppingCart.get(0);
         try {
             Client client = ClientBuilder.newClient();
-            WebTarget target = client  
-                    .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.storeentity") 
-                    .path("createECommerceTransactionRecord")    
-                    .queryParam("finalPrice", finalPrice)
-                    .queryParam("memberId", memberId);
-
-            Invocation.Builder invocationBuilder = target.request();
-            Response response = invocationBuilder.put(Entity.entity("","application/json"));  
-
+            WebTarget target = client
+                    .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.storeentity")
+                    .path("getQuantity")
+                    .queryParam("storeId", storeId)
+                    .queryParam("SKU", s.getSKU());
+            Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
+            Response response = invocationBuilder.get();
             if (response.getStatus() != 200) {
                 return 0;
             }
-            String result = (String) response.readEntity(String.class); 
-             System.out.println("createECommerceTransactionRecord result : " + result);
-            return Integer.parseInt(result); 
+            String result = (String) response.readEntity(String.class);
+            return Integer.parseInt(result);
+
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
         }
     }
 
-    public int createECommerceLineItemRecord(ShoppingCartLineItem scli, int transactionRecordId) {
-        
+    public int createECommerceTransactionRecord(double finalPrice, Long memberId,Long storeId) {
+        try {
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client
+                    .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.storeentity")
+                    .path("createECommerceTransactionRecord")
+                    .queryParam("finalPrice", finalPrice)
+                    .queryParam("memberId", memberId)
+                    .queryParam("storeId",storeId);
+
+            Invocation.Builder invocationBuilder = target.request();
+            Response response = invocationBuilder.put(Entity.entity("", "application/json"));
+
+            if (response.getStatus() != 200) {
+                return 0;
+            }
+            String result = (String) response.readEntity(String.class);
+            System.out.println("createECommerceTransactionRecord result : " + result);
+            return Integer.parseInt(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public int createECommerceLineItemRecord(ShoppingCartLineItem scli, int transactionRecordId,Long storeId) {
+
         try {
             Client client = ClientBuilder.newClient();
             WebTarget target = client
                     .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.storeentity")
                     .path("createECommerceLineItemRecord")
-                    .queryParam("quantity",scli.getQuantity())
+                    .queryParam("quantity", scli.getQuantity())
                     .queryParam("itemId", scli.getId())
                     .queryParam("SKU", scli.getSKU())
-                    .queryParam("transactionRecordId", transactionRecordId);
-            
+                    .queryParam("transactionRecordId", transactionRecordId)
+                    .queryParam("storeId",storeId);
+
             Invocation.Builder invocationBuilder = target.request();
-            Response response = invocationBuilder.put(Entity.entity("","application/json"));  
+            Response response = invocationBuilder.put(Entity.entity("", "application/json"));
             if (response.getStatus() != 200) {
                 return 0;
             }
@@ -137,14 +170,13 @@ public class ECommerce_PaymentServlet extends HttpServlet {
             return 0;
         }
     }
-    
-    
-    public String getStoreDetail(Long storeId, String type) {
+
+    public String getStoreNameOrAddress(Long storeId, String type) {
         try {
             Client client = ClientBuilder.newClient();
             WebTarget target = client
                     .target("http://localhost:8080/IS3102_WebService-Student/webresources/entity.storeentity")
-                    .path("getStoreDetail")
+                    .path("getStoreNameOrAddress")
                     .queryParam("storeId", storeId)
                     .queryParam("type", type);
             Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
@@ -152,7 +184,7 @@ public class ECommerce_PaymentServlet extends HttpServlet {
             if (response.getStatus() != 200) {
                 return null;
             }
-            String result = (String) response.readEntity(String.class);
+            String result = response.readEntity(String.class);
             return result;
 
         } catch (Exception e) {
@@ -160,7 +192,7 @@ public class ECommerce_PaymentServlet extends HttpServlet {
             return null;
         }
     }
-    
+
     public Member getMember(String email) {
         try {
 
