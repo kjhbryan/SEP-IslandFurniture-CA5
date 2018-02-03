@@ -72,11 +72,11 @@
                 $("#makePaymentForm").show("slow", function () {
                 });
             }
-            function makePayment() {
-                window.event.returnValue = true;
-                document.makePaymentForm.action = "../../ECommerce_PaymentServlet";
-                document.makePaymentForm.submit();
-            }
+//            function makePayment() {
+//                window.event.returnValue = true;
+//                document.makePaymentForm.action = "../../ECommerce_PaymentServlet";
+//                document.makePaymentForm.submit();
+//            }
         </script>
 
         <div class="body">
@@ -160,19 +160,19 @@
                                                             </td>
                                                             <td class="product-subtotal">
                                                                 $<span class="amount" id="totalPrice<%=item.getSKU()%>>">
-                                                                    <% 
+                                                                    <%
                                                                         DecimalFormat df = new DecimalFormat("#.00");
                                                                         df.setRoundingMode(RoundingMode.CEILING);
                                                                         subTotal = item.getQuantity() * item.getPrice();
                                                                         subTotal = Double.parseDouble(df.format(subTotal));
-                                                                        finalPrice+= subTotal; 
+                                                                        finalPrice += subTotal;
                                                                     %>
                                                                     <%=subTotal%>
                                                                 </span>
                                                             </td>
                                                         </tr>
                                                         <%                                                                 //   }
-                                                                }
+                                                                    }
                                                                 }
                                                             } catch (Exception ex) {
                                                                 System.out.println(ex);
@@ -204,7 +204,7 @@
                                             </form>
 
 
-                                            <form id="makePaymentForm" name="makePaymentForm" method="post" hidden>
+                                            <form id="makePaymentForm" name="makePaymentForm" method="post" action="../../ECommerce_PaymentServlet" hidden>
                                                 <div class="col-md-8">
                                                     <br>
                                                     <table>
@@ -217,7 +217,7 @@
                                                                 <label>Name on Card: </label>
                                                             </td>
                                                             <td style="padding: 5px">
-                                                                <input type="text" class="input-text text" title="name"id="txtName" required>                                                            
+                                                                <input type="text" class="input-text text" pattern="[A-Za-z]+" title="Please enter a valid name" title="name"id="txtName" required>                                                            
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -225,7 +225,7 @@
                                                                 <label>Card Number: </label>
                                                             </td>
                                                             <td style="padding: 5px">
-                                                                <input type="text" class="input-text text " title="cardno" id="txtCardNo" required>
+                                                                <input type="text" class="input-text text " maxlength="16" pattern="\d{16}|\d{4}[- ]\d{4}[- ]\d{4}[- ]\d{4}" title="Please provide a valid credit card number format."  title="cardno" id="txtCardNo" required>
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -233,10 +233,9 @@
                                                                 <label>CVV/CVC2: </label>
                                                             </td>
                                                             <td style="padding: 5px">
-                                                                <input type="text" class="input-text text " title="securitycode" id="txtSecuritycode" required>
+                                                                <input type="text" class="input-text text " type="number" maxlength="3" pattern="\d{3}" title="Please provide a valid cvv number" title="securitycode" id="txtSecuritycode" required>
                                                             </td>
                                                         </tr>
-
                                                         <tr>
                                                             <td style="padding: 5px;">
                                                                 <label>Expiry Date: </label>
@@ -256,14 +255,31 @@
                                                                     <option>November</option>
                                                                     <option>December</option>
                                                                 </select>
-                                                                <input type="text" style="width: 60px" class="input-text text" title="year" id="year" required>(eg: 2015)                                                        
+                                                                <input type="text" style="width: 60px" class="input-text text" pattern="\d{4}"  title="Please enter a valid year" id="year" required>(eg: 2015)                                                        
+                                                            </td>
+                                                        </tr>
+                                                        <tr style="margin-top:10px;">
+                                                            <td>
+                                                                 <h4 style="text-align:left">Store Selection</h4>  
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 5px;">
+                                                                <label>Select your store: </label>
+                                                            </td>
+                                                            <td>
+                                                                <select class="dropdown-header" name="storeSelection" title="Location" required>
+                                                                    <option value="59">Queenstown Store</option>
+                                                                    <option value="60">Kent Ridge Store</option>
+                                                                    <option value="61">Tampines Store</option>
+                                                                </select> 
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td style="">
                                                             </td>
                                                             <td style="padding-top: 20px">
-                                                                <div align="right"><a href="#makePaymentModal" data-toggle="modal"><button class="btn btn-primary">Make Payment</button></a></div>
+                                                                <div align="right"><input type="submit" data-toggle="modal" class="btn btn-primary" value="Make Payment"></div>
                                                             </td>
                                                         </tr>
                                                         </tbody></table>
